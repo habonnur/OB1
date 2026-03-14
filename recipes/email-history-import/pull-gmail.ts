@@ -701,22 +701,23 @@ async function ingestThoughtSupabase(
     return { ok: false, error: "Failed to generate embedding" };
   }
 
-  const rpcBody: Record<string, unknown> = {
-    p_content: content,
-    p_embedding: embedding,
-    p_metadata: metadata,
+  const row: Record<string, unknown> = {
+    content,
+    embedding,
+    metadata,
   };
-  if (parentId) rpcBody.p_parent_id = parentId;
-  if (chunkIndex !== undefined) rpcBody.p_chunk_index = chunkIndex;
+  if (parentId) row.parent_id = parentId;
+  if (chunkIndex !== undefined) row.chunk_index = chunkIndex;
 
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/insert_thought`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/thoughts`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "apikey": SUPABASE_SERVICE_ROLE_KEY,
       "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      "Prefer": "return=representation",
     },
-    body: JSON.stringify(rpcBody),
+    body: JSON.stringify(row),
   });
 
   if (!res.ok) {
@@ -725,11 +726,10 @@ async function ingestThoughtSupabase(
   }
 
   try {
-    // insert_thought RPC returns the UUID directly as a JSON string
-    const id = await res.json();
-    return { ok: true, id: typeof id === "string" ? id : String(id) };
+    const data = await res.json();
+    const id = Array.isArray(data) ? data[0]?.id : data?.id;
+    return { ok: true, id: id ? String(id) : undefined };
   } catch {
-    // If we can't parse the response but the status was OK, treat as success
     return { ok: true };
   }
 }

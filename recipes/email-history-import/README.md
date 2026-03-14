@@ -290,18 +290,21 @@ Solution: Emails under 500 words aren't chunked. If a long email came through as
 The script doesn't run automatically — you run it when you want to sync. Patterns that work well:
 
 **Weekly sync** (simplest):
+
 ```bash
 deno run --allow-net --allow-read --allow-write --allow-env \
   pull-gmail.ts --window=7d --labels=SENT,STARRED
 ```
 
 **Monthly deep sync** (for catching up):
+
 ```bash
 deno run --allow-net --allow-read --allow-write --allow-env \
   pull-gmail.ts --window=30d --labels=SENT,STARRED --limit=200
 ```
 
 **Scheduled via cron** (Mac, runs every Monday at 9am):
+
 ```bash
 # Add to crontab: crontab -e
 0 9 * * 1 cd /path/to/your/recipe/folder && \
